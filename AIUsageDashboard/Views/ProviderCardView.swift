@@ -12,6 +12,10 @@ struct ProviderCardView: View {
     let provider: AIProvider
     let usage: UsageSnapshot
     let isExpanded: Bool
+    let isConnected: Bool
+    
+    private var statusColor: Color { isConnected ? .green : .red }
+    private var statusLabel: String { isConnected ? "已連線" : "未連線" }
     
     var body: some View {
         VStack(spacing: 0) {
@@ -20,10 +24,15 @@ struct ProviderCardView: View {
                     Text(provider.icon).font(.title3)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(provider.name).font(.subheadline.bold())
-                        Text(usage.planName).font(.caption2).foregroundStyle(.tertiary)
+                        HStack(spacing: 4) {
+                            Circle().fill(statusColor).frame(width: 6, height: 6)
+                            Text(isConnected ? usage.planName : "未設定 API Key")
+                                .font(.caption2)
+                                .foregroundStyle(isConnected ? .tertiary : .red.opacity(0.8))
+                        }
                     }
                 }
-                .frame(width: 120, alignment: .leading)
+                .frame(width: 140, alignment: .leading)
                 
                 VStack(alignment: .leading, spacing: 4) {
                     HStack {
@@ -52,8 +61,15 @@ struct ProviderCardView: View {
                 }
                 .frame(width: 80)
                 
-                Circle().fill(usage.alertLevel.color).frame(width: 8, height: 8)
-                    .shadow(color: usage.alertLevel.color.opacity(0.5), radius: 4)
+                // Connection status dot (green = connected, red = not connected)
+                VStack(spacing: 2) {
+                    Circle().fill(statusColor).frame(width: 10, height: 10)
+                        .shadow(color: statusColor.opacity(0.6), radius: 4)
+                    Text(statusLabel)
+                        .font(.system(size: 8))
+                        .foregroundStyle(statusColor)
+                }
+                .frame(width: 36)
                 
                 Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                     .font(.caption).foregroundStyle(.tertiary)
@@ -62,19 +78,35 @@ struct ProviderCardView: View {
             
             if isExpanded {
                 Divider().padding(.horizontal)
-                HStack(spacing: 12) {
-                    detailTile(title: "今日使用", value: "\(usage.todayUsed) \(usage.unit.rawValue)")
-                    detailTile(title: "日均使用", value: "\(usage.averageDaily) \(usage.unit.rawValue)")
-                    detailTile(title: "預估耗盡", value: "\(usage.estimatedDaysLeft) 天",
-                             highlight: usage.estimatedDaysLeft < 5)
+                
+                if isConnected {
+                    HStack(spacing: 12) {
+                        detailTile(title: "今日使用", value: "\(usage.todayUsed) \(usage.unit.rawValue)")
+                        detailTile(title: "日均使用", value: "\(usage.averageDaily) \(usage.unit.rawValue)")
+                        detailTile(title: "預估耗盡", value: "\(usage.estimatedDaysLeft) 天",
+                                 highlight: usage.estimatedDaysLeft < 5)
+                    }
+                    .padding()
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+                } else {
+                    HStack(spacing: 8) {
+                        Image(systemName: "exclamationmark.circle.fill")
+                            .foregroundStyle(.red)
+                        Text("請至設定頁面設定 API Key 以啟用即時數據")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding()
+                    .transition(.opacity.combined(with: .move(edge: .top)))
                 }
-                .padding()
-                .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
         .background(.ultraThinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 14))
-        .overlay(RoundedRectangle(cornerRadius: 14).stroke(provider.color.opacity(0.15), lineWidth: 1))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(isConnected ? provider.color.opacity(0.15) : Color.red.opacity(0.2), lineWidth: 1)
+        )
     }
     
     private var progressColors: [Color] {
