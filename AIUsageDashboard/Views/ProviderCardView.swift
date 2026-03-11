@@ -26,9 +26,15 @@ struct ProviderCardView: View {
                         Text(provider.name).font(.subheadline.bold())
                         HStack(spacing: 4) {
                             Circle().fill(statusColor).frame(width: 6, height: 6)
-                            Text(isConnected ? usage.planName : "未設定 API Key")
-                                .font(.caption2)
-                                .foregroundStyle(isConnected ? .tertiary : .red.opacity(0.8))
+                            if isConnected {
+                                Text(usage.planName)
+                                    .font(.caption2)
+                                    .foregroundStyle(.tertiary)
+                            } else {
+                                Text("未設定 API Key")
+                                    .font(.caption2)
+                                    .foregroundStyle(Color.red.opacity(0.8))
+                            }
                         }
                     }
                 }
@@ -91,7 +97,7 @@ struct ProviderCardView: View {
                 } else {
                     HStack(spacing: 8) {
                         Image(systemName: "exclamationmark.circle.fill")
-                            .foregroundStyle(.red)
+                            .foregroundStyle(Color.red)
                         Text("請至設定頁面設定 API Key 以啟用即時數據")
                             .font(.caption)
                             .foregroundStyle(.secondary)
