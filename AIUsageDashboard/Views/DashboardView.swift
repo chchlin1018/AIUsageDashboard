@@ -64,8 +64,10 @@ struct DashboardView: View {
             Spacer()
             VStack(alignment: .trailing, spacing: 4) {
                 HStack(spacing: 4) {
-                    Circle().fill(viewModel.isLoading ? .orange : .green).frame(width: 6, height: 6)
-                    Text(viewModel.isLoading ? "更新中..." : "已連線")
+                    Circle()
+                        .fill(viewModel.isLoading ? .orange : (viewModel.connectedProviderCount > 0 ? .green : .red))
+                        .frame(width: 6, height: 6)
+                    Text(viewModel.isLoading ? "更新中..." : "\(viewModel.connectedProviderCount)/\(viewModel.providers.count) 已連線")
                         .font(.caption2).foregroundStyle(.secondary)
                 }
                 Text(viewModel.lastRefreshDate, style: .time)
@@ -106,8 +108,10 @@ struct DashboardView: View {
             StatCardView(icon: "bolt.fill", label: "今日請求",
                 value: "\(viewModel.todayTotalRequests)", subtitle: "較昨日",
                 trendValue: "+8%", trendUp: true, accentColor: .blue)
-            StatCardView(icon: "cpu.fill", label: "活躍平台",
-                value: "\(viewModel.activeProviderCount)", subtitle: "全部正常", accentColor: .green)
+            StatCardView(icon: "link.circle.fill", label: "連線狀態",
+                value: "\(viewModel.connectedProviderCount)/\(viewModel.providers.count)",
+                subtitle: viewModel.connectedProviderCount == viewModel.providers.count ? "全部已連線" : "\(viewModel.providers.count - viewModel.connectedProviderCount) 個未連線",
+                accentColor: viewModel.connectedProviderCount == viewModel.providers.count ? .green : .orange)
             StatCardView(icon: "bell.badge.fill", label: "警報",
                 value: "\(viewModel.alerts.count)",
                 subtitle: "\(viewModel.criticalAlertCount) 個嚴重",
@@ -121,8 +125,13 @@ struct DashboardView: View {
             Text("各平台用量").font(.headline)
             ForEach(viewModel.providers) { provider in
                 if let usage = viewModel.currentUsage[provider.id] {
-                    ProviderCardView(provider: provider, usage: usage,
-                        isExpanded: expandedProvider == provider.id)
+                    let isConnected = viewModel.isProviderConnected(provider.id)
+                    ProviderCardView(
+                        provider: provider,
+                        usage: usage,
+                        isExpanded: expandedProvider == provider.id,
+                        isConnected: isConnected
+                    )
                     .onTapGesture {
                         withAnimation(.spring(response: 0.3)) {
                             expandedProvider = expandedProvider == provider.id ? nil : provider.id
