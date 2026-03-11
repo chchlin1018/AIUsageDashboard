@@ -36,6 +36,18 @@ class DashboardViewModel: ObservableObject {
     var activeProviderCount: Int { config.providers.filter(\.isEnabled).count }
     var criticalAlertCount: Int { alerts.filter { $0.level >= .critical }.count }
     
+    // MARK: - Connection Status
+    
+    /// Check if a specific provider has an API key configured
+    func isProviderConnected(_ providerId: String) -> Bool {
+        config.providers.first { $0.providerId == providerId }?.apiKey != nil
+    }
+    
+    /// Number of providers with API keys configured
+    var connectedProviderCount: Int {
+        config.providers.filter { $0.apiKey != nil && $0.isEnabled }.count
+    }
+    
     var costBreakdown: [CostSummary] {
         let total = totalCost
         guard total > 0 else { return [] }
