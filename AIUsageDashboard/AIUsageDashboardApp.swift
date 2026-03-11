@@ -23,8 +23,9 @@ struct AIUsageDashboardApp: App {
         #if os(macOS)
         .windowStyle(.titleBar)
         .defaultSize(width: 1100, height: 750)
+        #endif
         
-        // macOS Menu Bar Extra (optional widget)
+        #if os(macOS)
         MenuBarExtra("AI Usage", systemImage: "cpu.fill") {
             MenuBarView()
                 .environmentObject(viewModel)
