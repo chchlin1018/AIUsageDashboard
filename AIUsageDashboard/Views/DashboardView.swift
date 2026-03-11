@@ -13,6 +13,14 @@ struct DashboardView: View {
     @EnvironmentObject var viewModel: DashboardViewModel
     @State private var expandedProvider: String?
     
+    private var gridColumns: [GridItem] {
+        #if os(macOS)
+        [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())]
+        #else
+        [GridItem(.flexible()), GridItem(.flexible())]
+        #endif
+    }
+    
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
@@ -23,7 +31,7 @@ struct DashboardView: View {
             }
             .padding()
         }
-        .background(Color(.systemBackground))
+        .background(Color(platformBackground))
         .navigationTitle("AI Usage Dashboard")
         .refreshable { await viewModel.refresh() }
         .toolbar {
@@ -34,6 +42,14 @@ struct DashboardView: View {
                 .disabled(viewModel.isLoading)
             }
         }
+    }
+    
+    private var platformBackground: String {
+        #if os(macOS)
+        "windowBackgroundColor"
+        #else
+        "systemBackground"
+        #endif
     }
     
     // MARK: - Header
@@ -82,12 +98,7 @@ struct DashboardView: View {
     
     // MARK: - Stats Grid
     private var statsGrid: some View {
-        LazyVGrid(columns: [
-            GridItem(.flexible()), GridItem(.flexible()),
-            #if os(macOS)
-            GridItem(.flexible()), GridItem(.flexible()),
-            #endif
-        ], spacing: 12) {
+        LazyVGrid(columns: gridColumns, spacing: 12) {
             StatCardView(icon: "dollarsign.circle.fill", label: "本月花費",
                 value: viewModel.totalCostFormatted,
                 subtitle: "預算 $\(String(format: "%.0f", viewModel.totalBudget))",
